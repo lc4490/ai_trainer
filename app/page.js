@@ -1,13 +1,16 @@
 "use client"
-import { Box, Stack, Typography, Button, TextField, CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material'
+import { Box, Stack, Typography, Button, TextField, CssBaseline, ThemeProvider, useMediaQuery, FormControl, InputLabel, NativeSelect } from '@mui/material'
 import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next';
+// light/dark mode
 import { createTheme } from '@mui/material';
+// import icons
 import PersonIcon from '@mui/icons-material/Person';
 import AssistantIcon from '@mui/icons-material/Assistant';
-import TranslateIcon from '@mui/icons-material/Translate';
+// translations
+import { useTranslation } from 'react-i18next';
 import i18n from './i18n'; // Adjust the path as necessary
 
+// light/dark themes
 const lightTheme = createTheme({
   palette: {
     mode: 'light',
@@ -22,7 +25,6 @@ const lightTheme = createTheme({
     },
   },
 });
-
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
@@ -39,22 +41,34 @@ const darkTheme = createTheme({
 });
 
 export default function Home() {
+  // translation
+  // declare for translation
   const { t, i18n } = useTranslation();
+  // change languages
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+    setMessages([{ role: 'assistant', content: t('welcome') }]);
+  };
+  const handleLanguageChange = (event) => {
+    const newLanguage = event.target.value;
+    changeLanguage(newLanguage);
+  };
+  
+  // detect light/dark mode, set light dark mode
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [darkMode, setDarkMode] = useState(prefersDarkMode);
-
   useEffect(() => {
     setDarkMode(prefersDarkMode);
   }, [prefersDarkMode]);
 
   const theme = darkMode ? darkTheme : lightTheme;
 
+  // sending messages
   const [messages, setMessages] = useState([
     { role: 'assistant', content: t('welcome') }
   ]);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const sendMessage = async () => {
     if (!message.trim() || isLoading) return;
     setIsLoading(true);
@@ -104,7 +118,6 @@ export default function Home() {
     }
     setIsLoading(false);
   };
-
   const handleKeyPress = (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -112,20 +125,17 @@ export default function Home() {
     }
   };
 
-  const changeLanguage = (lng) => {
-    i18n.changeLanguage(lng);
-    setMessages([{ role: 'assistant', content: t('welcome') }]);
-  };
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      {/* og box */}
       <Box
         width="100vw"
         height="90vh"
         display="flex"
         flexDirection="column"
       >
+        {/* header box */}
         <Box
           height="10%"
           bgcolor="background.default"
@@ -135,30 +145,50 @@ export default function Home() {
           alignItems="center"
           position="relative"
         >
-          <Button 
-            variant="outlined" 
-            onClick={() => changeLanguage(i18n.language === 'en' ? 'cn' : 'en')}
-            sx={{
-              height: "55px",
-              fontSize: '1rem',
-              backgroundColor: 'background.default',
-              color: 'text.primary',
-              borderColor: 'background.default',
-              borderRadius: '50px',
-                '&:hover': {
-                backgroundColor: 'text.primary',
-                color: 'background.default',
-                borderColor: 'text.primary',
-              },
-            }}
-          >
-            <TranslateIcon sx={{ ml: 1, fontSize: '1.5rem' }} />
-          </Button>
+          {/* language control  */}
+          <FormControl>
+            <InputLabel variant="standard" htmlFor="uncontrolled-native">
+              {t('language')}
+            </InputLabel>
+            <NativeSelect
+              defaultValue={'en'}
+              onChange={handleLanguageChange}
+              inputProps={{
+                name: t('language'),
+                id: 'uncontrolled-native',
+              }}
+              sx={{
+                '& .MuiNativeSelect-select': {
+                  '&:focus': {
+                    backgroundColor: 'transparent',
+                  },
+                },
+                '&::before': {
+                  borderBottom: 'none',
+                },
+                '&::after': {
+                  borderBottom: 'none',
+                },
+              }}
+              disableUnderline
+            >
+              <option value="en">English</option>
+              <option value="cn">中文（简体）</option>
+              <option value="tc">中文（繁體）</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="jp">日本語</option>
+              <option value="kr">한국어</option>
+            </NativeSelect>
+          </FormControl>
+          {/* title */}
           <Box display="flex" flexDirection={"row"} alignItems={"center"}>
             <Typography variant="h6" color="text.primary" textAlign="center">
               {t('trainerGPT')}
             </Typography>
           </Box>
+          {/* signIn/signOut Form */}
           <Box>
             {/* {!user ? (
               <Button
@@ -197,11 +227,13 @@ export default function Home() {
           </Box>
         </Box>
 
+        {/* chat */}
         <Stack
           direction="column"
           width="100vw"
           height="100%"
         >
+          {/* previous messages log */}
           <Stack direction="column" spacing={2} flexGrow={1} overflow='auto' padding={2}>
             {
               messages.map((message, index) => (
@@ -228,6 +260,7 @@ export default function Home() {
               ))
             }
           </Stack>
+          {/* input field */}
           <Stack direction="row" spacing={2} padding={2} sx={{ width: '100%', bottom: 0 }}>
             <TextField
               label={t('Message')}
@@ -237,6 +270,7 @@ export default function Home() {
               onKeyDown={handleKeyPress}
               disabled={isLoading}
             ></TextField>
+            {/* send button */}
             <Button
               variant="outlined"
               onClick={sendMessage}
