@@ -191,7 +191,12 @@ export default function Home() {
           position="relative"
         >
           {/* language control  */}
-          <FormControl>
+          <FormControl
+          sx={{
+            width: '25%', // Adjust the width value as needed
+          }}
+          >
+            
             <InputLabel variant="standard" htmlFor="uncontrolled-native">
               {t('language')}
             </InputLabel>
