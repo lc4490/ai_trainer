@@ -131,7 +131,7 @@ export default function Home() {
   // sign in function for google auth
   const handleSignIn = async () => {
     try {
-      const result = await signInWithRedirect(auth, provider);
+      const result = await signInWithPopup(auth, provider);
       const user = result.user;
       console.log('User signed in:', user);
       setGuestMode(false); // Disable guest mode on successful sign-in
