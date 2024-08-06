@@ -6,8 +6,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createTheme, ThemeProvider, useTheme, CssBaseline, useMediaQuery, IconButton } from '@mui/material';
 
 // icon imports
-import PersonIcon from '@mui/icons-material/Person';
-import AssistantIcon from '@mui/icons-material/Assistant';
+import {Person, Assistant, Translate } from '@mui/icons-material';
 
 // use googlesignin
 // import { onAuthStateChanged } from 'firebase/auth';
@@ -199,14 +198,14 @@ export default function Home() {
               color: 'text.primary',
               borderColor: 'background.default',
               borderRadius: '50px',
-              '&:hover': {
+                '&:hover': {
                 backgroundColor: 'text.primary',
                 color: 'background.default',
                 borderColor: 'text.primary',
               },
             }}
           >
-            <Typography variant="h5">+</Typography>
+            <Translate sx={{ ml: 1, fontSize: '1.5rem' }} />
           </Button>
           {/* title */}
           <Box display = "flex" flexDirection={"row"} alignItems={"center"}>
@@ -273,7 +272,7 @@ export default function Home() {
               justifyContent = {message.role == 'assistant' ? 'flex-start' : 'flex-end'}
               >
                 {message.role === 'assistant' && (
-                <AssistantIcon sx={{ mr: 1, color: 'text.primary', fontSize: '2.5rem'}} />
+                <Assistant sx={{ mr: 1, color: 'text.primary', fontSize: '2.5rem'}} />
               )}
                 <Box
                 bgcolor = {message.role == 'assistant' ? 'background.bubbles' : 'background.userBubble'}
@@ -284,7 +283,7 @@ export default function Home() {
                   {message.content}
                 </Box>
                 {message.role === 'user' && (
-                <PersonIcon sx={{ ml: 1, color: 'text.primary', fontSize: '2.5rem' }} />
+                <Person sx={{ ml: 1, color: 'text.primary', fontSize: '2.5rem' }} />
               )}
               </Box> 
             ))}
