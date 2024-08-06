@@ -9,6 +9,9 @@ import AssistantIcon from '@mui/icons-material/Assistant';
 // translations
 import { useTranslation } from 'react-i18next';
 import i18n from './i18n'; // Adjust the path as necessary
+// use googlesignin
+import { firestore, auth, provider, signInWithPopup, signOut, signInWithRedirect } from '@/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 // light/dark themes
 const lightTheme = createTheme({
@@ -124,6 +127,48 @@ export default function Home() {
       sendMessage();
     }
   };
+  // google auth
+  // sign in function for google auth
+  const handleSignIn = async () => {
+    try {
+      const result = await signInWithRedirect(auth, provider);
+      const user = result.user;
+      console.log('User signed in:', user);
+      setGuestMode(false); // Disable guest mode on successful sign-in
+    } catch (error) {
+      console.error('Error signing in:', error);
+      alert('Sign in failed: ' + error.message);
+    }
+  };
+  // sign out function for google auth
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      console.log('User signed out');
+      setUser(null);
+      setGuestMode(true); // Enable guest mode on sign-out
+    } catch (error) {
+      console.error('Error signing out:', error);
+      alert('Sign out failed: ' + error.message);
+    }
+  };
+
+  // declareables for user and guest mode
+  const [user, setUser] = useState(null);
+  const [guestMode, setGuestMode] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+        setGuestMode(false);
+      } else {
+        setUser(null);
+        setGuestMode(true);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -190,8 +235,9 @@ export default function Home() {
           </Box>
           {/* signIn/signOut Form */}
           <Box>
-            {/* {!user ? (
+            {!user ? (
               <Button
+                onClick={handleSignIn}
                 sx={{
                   justifyContent: "end",
                   right: "2%",
@@ -209,6 +255,7 @@ export default function Home() {
               </Button>
             ) : (
               <Button
+              onClick={handleSignOut}
                 sx={{
                   backgroundColor: 'background.default',
                   color: 'text.primary',
@@ -223,7 +270,7 @@ export default function Home() {
               >
                 {t('signOut')}
               </Button>
-            )} */}
+            )}
           </Box>
         </Box>
 
