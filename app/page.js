@@ -7,6 +7,9 @@ import { createTheme, ThemeProvider, useTheme, CssBaseline, useMediaQuery, IconB
 
 // icon imports
 import {Person, Assistant, Translate } from '@mui/icons-material';
+import PersonIcon from '@mui/icons-material/Person';
+import AssistantIcon from '@mui/icons-material/Assistant';
+import TranslateIcon from '@mui/icons-material/Translate';
 
 // use googlesignin
 // import { onAuthStateChanged } from 'firebase/auth';
@@ -205,7 +208,7 @@ export default function Home() {
               },
             }}
           >
-            <Translate sx={{ ml: 1, fontSize: '1.5rem' }} />
+            <TranslateIcon sx={{ ml: 1, fontSize: '1.5rem' }} />
           </Button>
           {/* title */}
           <Box display = "flex" flexDirection={"row"} alignItems={"center"}>
@@ -272,7 +275,7 @@ export default function Home() {
               justifyContent = {message.role == 'assistant' ? 'flex-start' : 'flex-end'}
               >
                 {message.role === 'assistant' && (
-                <Assistant sx={{ mr: 1, color: 'text.primary', fontSize: '2.5rem'}} />
+                <AssistantIcon sx={{ mr: 1, color: 'text.primary', fontSize: '2.5rem'}} />
               )}
                 <Box
                 bgcolor = {message.role == 'assistant' ? 'background.bubbles' : 'background.userBubble'}
@@ -283,7 +286,7 @@ export default function Home() {
                   {message.content}
                 </Box>
                 {message.role === 'user' && (
-                <Person sx={{ ml: 1, color: 'text.primary', fontSize: '2.5rem' }} />
+                <PersonIcon sx={{ ml: 1, color: 'text.primary', fontSize: '2.5rem' }} />
               )}
               </Box> 
             ))}
