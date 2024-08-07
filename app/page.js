@@ -193,7 +193,7 @@ export default function Home() {
           {/* language control  */}
           <FormControl
           sx={{
-            width: '25%', // Adjust the width value as needed
+            width: '85px', // Adjust the width value as needed
           }}
           >
             
