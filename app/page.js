@@ -12,6 +12,8 @@ import i18n from './i18n'; // Adjust the path as necessary
 // use googlesignin
 import { firestore, auth, provider, signInWithPopup, signOut, signInWithRedirect } from '@/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+// linebreaks
+import ReactMarkdown from 'react-markdown';
 
 // light/dark themes
 const lightTheme = createTheme({
@@ -170,6 +172,15 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
+  // scroll chat down as search
+  useEffect(() => {
+    const chatLog = document.querySelector('.chat-log');
+    if (chatLog) {
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+  }, [messages]);
+  
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -286,7 +297,7 @@ export default function Home() {
           height="100%"
         >
           {/* previous messages log */}
-          <Stack direction="column" spacing={2} flexGrow={1} overflow='auto' padding={2}>
+          <Stack direction="column" spacing={2} flexGrow={1} overflow='auto' padding={2} className = "chat-log">
             {
               messages.map((message, index) => (
                 <Box
@@ -300,10 +311,16 @@ export default function Home() {
                   <Box
                     bgcolor={message.role === 'assistant' ? 'background.bubbles' : 'background.userBubble'}
                     color={message.role === 'assistant' ? "text.primary" : 'black'}
-                    borderRadius={2.5}
-                    p={2}
+                    borderRadius={3.5}
+                    p={3.5}
+                    sx={{
+                      maxWidth: '75%', // Ensure the box doesn't take up the entire width
+                      wordBreak: 'break-word', // Break long words to avoid overflow
+                      // whiteSpace: 'pre-wrap', // Preserve whitespace and line breaks, but wrap text
+                      overflowWrap: 'break-word', // Break long words
+                    }}
                   >
-                    {message.content}
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
                   </Box>
                   {message.role === 'user' && (
                     <PersonIcon sx={{ ml: 1, color: 'text.primary', fontSize: '2.5rem' }} />
