@@ -1,5 +1,5 @@
 "use client"
-import { Box, Stack, Typography, Button, TextField, CssBaseline, ThemeProvider, useMediaQuery, FormControl, InputLabel, NativeSelect } from '@mui/material'
+import { Box, Stack, Typography, Button, TextField, CssBaseline, ThemeProvider, useMediaQuery, FormControl, InputLabel, NativeSelect, Link } from '@mui/material'
 import { useEffect, useState } from 'react'
 // light/dark mode
 import { createTheme } from '@mui/material';
@@ -45,6 +45,16 @@ const darkTheme = createTheme({
     },
   },
 });
+
+// link color
+const customComponents = {
+  a: ({ href, children }) => (
+    <Link href={href} color="lightblue" underline="hover">
+      {children}
+    </Link>
+  ),
+};
+
 export default function Home() {
   // translation
   // declare for translation
@@ -126,12 +136,12 @@ export default function Home() {
       let youtubeLinks = [];
       let responseContent = ``;
       for(let i = 0; i < exerciseNames.length; i++){
-        let youtubeLinks = getYouTubeLinksForExercise(exerciseNames[i])
+        let links = getYouTubeLinksForExercise(exerciseNames[i])
         // console.log(link)
         responseContent += `Here are some YouTube links for ${exerciseNames[i]}: \n\n`;
         // responseContent+= `${link}\n`
         // // youtubeLinks.push(getYouTubeLinksForExercise(exerciseNames[i]))
-        youtubeLinks.forEach(link => {
+        links.forEach(link => {
         responseContent += `${link}\n`;
       });
       }
@@ -154,10 +164,11 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify([...messages, { 
-          role: 'user', content: `User: ${message}`,
-          role: 'assistant', content: combinedInput,
-        }]),
+        body: JSON.stringify([
+          ...messages, 
+          { role: 'user', content: combinedInput },
+          { role: 'assistant', content: combinedInput }
+        ]),
       });
 
       if (!response.ok) {
@@ -556,7 +567,7 @@ export default function Home() {
                       overflowWrap: 'break-word', // Break long words
                     }}
                   >
-                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                    <ReactMarkdown components={customComponents}>{message.content}</ReactMarkdown>
                   </Box>
                   {message.role === 'user' && (
                     <PersonIcon sx={{ ml: 1, color: 'text.primary', fontSize: '2.5rem' }} />
