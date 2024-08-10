@@ -118,7 +118,6 @@ export default function Home() {
       else{
         username = "Guest"
       }
-      console.log(equipment)
       let relevantText;
       if(equipment.length> 0){
         relevantText = equipment.map(eq => `${eq.name}`).join("\n");
@@ -138,7 +137,7 @@ export default function Home() {
         },
         body: JSON.stringify([...messages, { 
           role: 'user', content: `User: ${message}`,
-          role: 'assistant', content: combinedInput,
+          // role: 'assistant', content: combinedInput,
         }]),
       });
 
@@ -274,6 +273,7 @@ export default function Home() {
           display="flex"
           justifyContent="space-between"
           paddingX={2.5}
+          paddingY={2.5}
           alignItems="center"
           position="relative"
         >
