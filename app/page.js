@@ -399,11 +399,6 @@ export default function Home() {
     return ret;
   };
   
-  
-  
-  
-
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -538,7 +533,8 @@ export default function Home() {
                     bgcolor={message.role === 'assistant' ? 'background.bubbles' : 'background.userBubble'}
                     color={message.role === 'assistant' ? "text.primary" : 'black'}
                     borderRadius={3.5}
-                    p={3.5}
+                    paddingX={3.5}
+                    paddingY={2.5}
                     sx={{
                       maxWidth: '75%', // Ensure the box doesn't take up the entire width
                       wordBreak: 'break-word', // Break long words to avoid overflow
