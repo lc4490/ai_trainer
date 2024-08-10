@@ -52,7 +52,21 @@ export default function Home() {
   // change languages
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
-    setMessages([{ role: 'assistant', content: t('welcome') }]);
+    if (user) {
+      const displayName = " " + user.displayName || 'User';
+      // const firstName = displayName.split(' ')[0]; // Extract the first name
+  
+      // Set the personalized welcome message
+      const personalizedWelcome = t('welcome', { name: displayName });
+  
+      setMessages([
+        { role: 'assistant', content: personalizedWelcome }
+      ]);
+    }
+    else{
+      setMessages([{ role: 'assistant', content: t('welcome') }]);
+    }
+    
   };
   const handleLanguageChange = (event) => {
     const newLanguage = event.target.value;
