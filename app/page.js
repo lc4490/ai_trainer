@@ -10,7 +10,8 @@ import AssistantIcon from '@mui/icons-material/Assistant';
 import { useTranslation } from 'react-i18next';
 import i18n from './i18n'; // Adjust the path as necessary
 // use googlesignin
-import { firestore, auth, provider, signInWithPopup, signOut, signInWithRedirect } from '@/firebase';
+import { firestore, auth, provider, signInWithPopup, signOut } from '@/firebase'
+import { collection, getDocs, query, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 // linebreaks
 import ReactMarkdown from 'react-markdown';
@@ -44,7 +45,6 @@ const darkTheme = createTheme({
     },
   },
 });
-
 export default function Home() {
   // translation
   // declare for translation
@@ -58,15 +58,38 @@ export default function Home() {
     const newLanguage = event.target.value;
     changeLanguage(newLanguage);
   };
-  
   // detect light/dark mode, set light dark mode
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [darkMode, setDarkMode] = useState(prefersDarkMode);
   useEffect(() => {
     setDarkMode(prefersDarkMode);
   }, [prefersDarkMode]);
-
   const theme = darkMode ? darkTheme : lightTheme;
+
+  // gym equipment
+  const [equipment, setEquipment] = useState([])
+  // update equipment based on firebase
+  const updateEquipment = async () => {
+    if (auth.currentUser) {
+      console.log("User is authenticated, updating equipment...");
+      const userUID = auth.currentUser.uid;
+      const snapshot = query(collection(firestore, `equipment_${userUID}`));
+      const docs = await getDocs(snapshot);
+      console.log("Docs fetched:", docs.docs);
+      const equipment = [];
+      docs.forEach((doc) => {
+        console.log("Doc data:", doc.data());
+        equipment.push({ name: doc.id, ...doc.data() });
+      });
+      setEquipment(equipment);
+      console.log("Equipment set:", equipment);
+    } else {
+      console.log("User is not authenticated.");
+    }
+  };
+  useEffect(() => {
+    updateEquipment()
+  }, [])
 
   // sending messages
   const [messages, setMessages] = useState([
@@ -86,12 +109,37 @@ export default function Home() {
     ]);
 
     try {
+      // RAG implementation
+      // extract name
+      let username;
+      if(user){
+        username = user.displayName.split(' ')
+      }
+      else{
+        username = "Guest"
+      }
+      console.log(equipment)
+      let relevantText;
+      if(equipment.length> 0){
+        relevantText = equipment.map(eq => `${eq.name}`).join("\n");
+      }
+      else{
+        relevantText="None"
+      }
+
+      // Combine user message with retrieved information
+      const combinedInput = `This is the user's name: ${username}This is the equipment available: ${relevantText}\n`;
+
+      // Generate response from the AI model
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify([...messages, { role: 'user', content: message }]),
+        body: JSON.stringify([...messages, { 
+          role: 'user', content: `User: ${message}`,
+          role: 'assistant', content: combinedInput,
+        }]),
       });
 
       if (!response.ok) {
@@ -158,19 +206,48 @@ export default function Home() {
   // declareables for user and guest mode
   const [user, setUser] = useState(null);
   const [guestMode, setGuestMode] = useState(false);
-
+  const [name, setName] = useState(null);
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
+        setName(user.displayName);
+        updateEquipment();
         setGuestMode(false);
       } else {
         setUser(null);
+        setName("Guest");
+        setEquipment([]);
         setGuestMode(true);
       }
     });
     return () => unsubscribe();
   }, []);
+  // change welcome message based on custom user
+  useEffect(() => {
+    if (user) {
+      const displayName = " " + user.displayName || 'User';
+      // const firstName = displayName.split(' ')[0]; // Extract the first name
+  
+      // Set the personalized welcome message
+      const personalizedWelcome = t('welcome', { name: displayName });
+  
+      setMessages([
+        { role: 'assistant', content: personalizedWelcome }
+      ]);
+    }
+    else{
+      const displayName = "";
+      // const firstName = displayName.split(' ')[0]; // Extract the first name
+  
+      // Set the personalized welcome message
+      const personalizedWelcome = t('welcome', { name: displayName });
+  
+      setMessages([
+        { role: 'assistant', content: personalizedWelcome }
+      ]);
+    }
+  }, [user]); // This useEffect will run whenever the user state changes
 
   // scroll chat down as search
   useEffect(() => {
@@ -179,7 +256,6 @@ export default function Home() {
       chatLog.scrollTop = chatLog.scrollHeight;
     }
   }, [messages]);
-  
 
   return (
     <ThemeProvider theme={theme}>
@@ -243,6 +319,7 @@ export default function Home() {
               <option value="kr">한국어</option>
             </NativeSelect>
           </FormControl>
+          {/* <Button>Equipment</Button> */}
           {/* title */}
           <Box display="flex" flexDirection={"row"} alignItems={"center"}>
             <Typography variant="h6" color="text.primary" textAlign="center">
@@ -297,6 +374,7 @@ export default function Home() {
           height="100%"
         >
           {/* previous messages log */}
+
           <Stack direction="column" spacing={2} flexGrow={1} overflow='auto' padding={2} className = "chat-log">
             {
               messages.map((message, index) => (
@@ -316,7 +394,7 @@ export default function Home() {
                     sx={{
                       maxWidth: '75%', // Ensure the box doesn't take up the entire width
                       wordBreak: 'break-word', // Break long words to avoid overflow
-                      // whiteSpace: 'pre-wrap', // Preserve whitespace and line breaks, but wrap text
+                      // whiteSpace: "balance", // Preserve whitespace and line breaks, but wrap text
                       overflowWrap: 'break-word', // Break long words
                     }}
                   >
