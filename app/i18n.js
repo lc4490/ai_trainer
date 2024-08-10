@@ -5,7 +5,7 @@ import { initReactI18next } from 'react-i18next';
 const resources = {
   en: {
     translation: {
-      "welcome": "Hi! I am your AI gym trainer. How can I help you today?",
+      "welcome": "Hi{{name}}! I am your AI gym trainer. How can I help you today?",
       "send": "Send",
       "signIn": "Sign In",
       "signOut": "Sign Out",
@@ -16,7 +16,7 @@ const resources = {
   },
   cn: {
     translation: {
-      "welcome": "嗨！我是您的AI健身教练。今天有什么可以帮你的吗？",
+      "welcome": "嗨{{name}}！我是您的AI健身教练。今天有什么可以帮你的吗？",
       "send": "发",
       "signIn": "登入",
       "signOut": "登出",
@@ -27,7 +27,7 @@ const resources = {
   },
   tc: {
     translation: {
-      "welcome": "嗨！我是您的AI健身教練。今天有什麼可以幫你的吗？",
+      "welcome": "嗨{{name}}！我是您的AI健身教練。今天有什麼可以幫你的吗？",
       "send": "發送",
       "signIn": "登入",
       "signOut": "登出",
@@ -38,7 +38,7 @@ const resources = {
   },
   es: {
     translation: {
-      "welcome": "¡Hola! Soy tu entrenador de gimnasio AI. ¿Cómo puedo ayudarte hoy?",
+      "welcome": "¡Hola{{name}}! Soy tu entrenador de gimnasio AI. ¿Cómo puedo ayudarte hoy?",
       "send": "Enviar",
       "signIn": "Iniciar sesión",
       "signOut": "Cerrar sesión",
@@ -49,7 +49,7 @@ const resources = {
   },
   fr: {
     translation: {
-      "welcome": "Salut! Je suis votre entraîneur de gym IA. Comment puis-je vous aider aujourd'hui?",
+      "welcome": "Salut{{name}}! Je suis votre entraîneur de gym IA. Comment puis-je vous aider aujourd'hui?",
       "send": "Envoyer",
       "signIn": "Se connecter",
       "signOut": "Se déconnecter",
@@ -60,7 +60,7 @@ const resources = {
   },
   de: {
     "translation": {
-      "welcome": "Hallo! Ich bin Ihr KI-Fitnesstrainer. Wie kann ich Ihnen heute helfen?",
+      "welcome": "Hallo{{name}}! Ich bin Ihr KI-Fitnesstrainer. Wie kann ich Ihnen heute helfen?",
       "send": "Senden",
       "signIn": "Anmelden",
       "signOut": "Abmelden",
@@ -71,7 +71,7 @@ const resources = {
   },
   jp: {
     translation: {
-      "welcome": "こんにちは！私はあなたのAIジムトレーナーです。今日はどうされましたか？",
+      "welcome": "こんにちは{{name}}！私はあなたのAIジムトレーナーです。今日はどうされましたか？",
       "send": "送信",
       "signIn": "サインイン",
       "signOut": "サインアウト",
@@ -82,7 +82,7 @@ const resources = {
   },
   kr: {
     translation: {
-      "welcome": "안녕하세요! 저는 당신의 AI 체육관 트레이너입니다. 오늘 어떻게 도와드릴까요?",
+      "welcome": "안녕하세요{{name}}! 저는 당신의 AI 체육관 트레이너입니다. 오늘 어떻게 도와드릴까요?",
       "send": "보내다",
       "signIn": "로그인",
       "signOut": "로그아웃",
