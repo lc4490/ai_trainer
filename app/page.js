@@ -66,31 +66,6 @@ export default function Home() {
   }, [prefersDarkMode]);
   const theme = darkMode ? darkTheme : lightTheme;
 
-  // gym equipment
-  const [equipment, setEquipment] = useState([])
-  // update equipment based on firebase
-  const updateEquipment = async () => {
-    if (auth.currentUser) {
-      console.log("User is authenticated, updating equipment...");
-      const userUID = auth.currentUser.uid;
-      const snapshot = query(collection(firestore, `equipment_${userUID}`));
-      const docs = await getDocs(snapshot);
-      console.log("Docs fetched:", docs.docs);
-      const equipment = [];
-      docs.forEach((doc) => {
-        console.log("Doc data:", doc.data());
-        equipment.push({ name: doc.id, ...doc.data() });
-      });
-      setEquipment(equipment);
-      console.log("Equipment set:", equipment);
-    } else {
-      console.log("User is not authenticated.");
-    }
-  };
-  useEffect(() => {
-    updateEquipment()
-  }, [])
-
   // sending messages
   const [messages, setMessages] = useState([
     { role: 'assistant', content: t('welcome') }
@@ -111,23 +86,53 @@ export default function Home() {
     try {
       // RAG implementation
       // extract name
-      let username;
-      if(user){
-        username = user.displayName.split(' ')
-      }
-      else{
-        username = "Guest"
-      }
-      let relevantText;
-      if(equipment.length> 0){
-        relevantText = equipment.map(eq => `${eq.name}`).join("\n");
-      }
-      else{
-        relevantText="None"
-      }
+      // let username;
+      // if(user){
+      //   username = user.displayName.split(' ')
+      // }
+      // else{
+      //   username = "Guest"
+      // }
+      // let relevantText;
+      // if(equipment.length> 0){
+      //   relevantText = equipment.map(eq => `${eq.name}`).join("\n");
+      // }
+      // else{
+      //   relevantText="None"
+      // }
 
-      // Combine user message with retrieved information
-      const combinedInput = `This is the user's name: ${username}This is the equipment available: ${relevantText}\n`;
+      // // Combine user message with retrieved information
+      // const combinedInput = `This is the user's name: ${username}This is the equipment available: ${relevantText}\n`;
+
+      // RAGS FOR LINKS
+      // Extract the exercise name
+      const exerciseNames = extractExerciseName(message); // Implement this as needed
+      console.log(exerciseNames)
+      
+      let youtubeLinks = [];
+      let responseContent = ``;
+      for(let i = 0; i < exerciseNames.length; i++){
+        let youtubeLinks = getYouTubeLinksForExercise(exerciseNames[i])
+        // console.log(link)
+        responseContent += `Here are some YouTube links for ${exerciseNames[i]}: \n\n`;
+        // responseContent+= `${link}\n`
+        // // youtubeLinks.push(getYouTubeLinksForExercise(exerciseNames[i]))
+        youtubeLinks.forEach(link => {
+        responseContent += `${link}\n`;
+      });
+      }
+      console.log(responseContent)
+      // if (exerciseName.length > 0) {
+      //   youtubeLinks = getYouTubeLinksForExercise(exerciseName);
+      // }
+
+      // let responseContent = `Here are some YouTube links for ${exerciseName}: \n\n`;
+      // youtubeLinks.forEach(link => {
+      //   responseContent += `${link}\n`;
+      // });
+
+      // Combine with AI-generated response (if applicable)
+      const combinedInput = `User: ${message}\nYouTube Links: ${responseContent}`;
 
       // Generate response from the AI model
       const response = await fetch('/api/chat', {
@@ -137,7 +142,7 @@ export default function Home() {
         },
         body: JSON.stringify([...messages, { 
           role: 'user', content: `User: ${message}`,
-          // role: 'assistant', content: combinedInput,
+          role: 'assistant', content: combinedInput,
         }]),
       });
 
@@ -211,12 +216,12 @@ export default function Home() {
       if (user) {
         setUser(user);
         setName(user.displayName);
-        updateEquipment();
+        // updateEquipment();
         setGuestMode(false);
       } else {
         setUser(null);
         setName("Guest");
-        setEquipment([]);
+        // setEquipment([]);
         setGuestMode(true);
       }
     });
@@ -255,6 +260,149 @@ export default function Home() {
       chatLog.scrollTop = chatLog.scrollHeight;
     }
   }, [messages]);
+
+  // gym equipment
+  // const [equipment, setEquipment] = useState([])
+  // // update equipment based on firebase
+  // const updateEquipment = async () => {
+  //   if (auth.currentUser) {
+  //     console.log("User is authenticated, updating equipment...");
+  //     const userUID = auth.currentUser.uid;
+  //     const snapshot = query(collection(firestore, `equipment_${userUID}`));
+  //     const docs = await getDocs(snapshot);
+  //     console.log("Docs fetched:", docs.docs);
+  //     const equipment = [];
+  //     docs.forEach((doc) => {
+  //       console.log("Doc data:", doc.data());
+  //       equipment.push({ name: doc.id, ...doc.data() });
+  //     });
+  //     setEquipment(equipment);
+  //     console.log("Equipment set:", equipment);
+  //   } else {
+  //     console.log("User is not authenticated.");
+  //   }
+  // };
+  // useEffect(() => {
+  //   updateEquipment()
+  // }, [])
+  // RAG implementation for youtube links
+  const exerciseData = [
+    {
+      name: 'Push-Up',
+      youtubeLinks: [
+        'https://youtu.be/IODxDxX7oi4',
+        'https://youtu.be/_l3ySVKYVJ8',
+      ],
+    },
+    {
+      name: 'Squat',
+      youtubeLinks: [
+        'https://youtu.be/aclHkVaku9U',
+        'https://youtu.be/YaXPRqUwItQ',
+      ],
+    },
+    {
+      name: 'Plank',
+      youtubeLinks: [
+        'https://youtu.be/BQu26ABuVS0',
+        'https://youtu.be/pSHjTRCQxIw',
+      ],
+    },
+    {
+      name: 'Burpee',
+      youtubeLinks: [
+        'https://youtu.be/TU8QYVW0gDU',
+        'https://youtu.be/JZQA08SlJnM',
+      ],
+    },
+    {
+      name: 'Lunge',
+      youtubeLinks: [
+        'https://youtu.be/QOVaHwm-Q6U',
+        'https://youtu.be/D7KaRcUTQeE',
+      ],
+    },
+    {
+      name: 'Deadlift',
+      youtubeLinks: [
+        'https://youtu.be/op9kVnSso6Q',
+        'https://youtu.be/r4MzxtBKyNE',
+      ],
+    },
+    {
+      name: 'Bench Press',
+      youtubeLinks: [
+        'https://youtu.be/gRVjAtPip0Y',
+        'https://youtu.be/vthMCtgVtFw',
+      ],
+    },
+    {
+      name: 'Bicep Curl',
+      youtubeLinks: [
+        'https://youtu.be/ykJmrZ5v0Oo',
+        'https://youtu.be/sAq_ocpRh_I',
+      ],
+    },
+    {
+      name: 'Pull-Up',
+      youtubeLinks: [
+        'https://youtu.be/eGo4IYlbE5g',
+        'https://youtu.be/COQusflW6zA',
+      ],
+    },
+    {
+      name: 'Mountain Climber',
+      youtubeLinks: [
+        'https://youtu.be/1w9VuNgBnAQ',
+        'https://youtu.be/cnyTQDSE884',
+      ],
+    },
+    {
+      name: 'Tricep Dip',
+      youtubeLinks: [
+        'https://www.youtube.com/watch?v=6kALZikXxLc',
+        'https://www.youtube.com/watch?v=89_spgcdQlw',
+        // n-sync
+        'https://www.youtube.com/watch?v=Eo-KmOd3i7s',
+      ],
+    },
+  ];
+
+  const getYouTubeLinksForExercise = (exerciseName) => {
+    const exercise = exerciseData.find(
+      (ex) => ex.name.toLowerCase() === exerciseName.toLowerCase()
+    );
+  
+    if (exercise) {
+      return exercise.youtubeLinks;
+    } else {
+      return [];
+    }
+  };
+  const extractExerciseName = (message) => {
+    let ret = []
+    // Convert the message to lowercase for case-insensitive matching
+    const lowerCaseMessage = message.toLowerCase();
+  
+    // Iterate through the exerciseData array to find a matching exercise name
+    for (let i = 0; i < exerciseData.length; i++) {
+      const exercise = exerciseData[i];
+      const exerciseName = exercise.name.toLowerCase();
+  
+      // Check if the exercise name exists in the message
+      if (lowerCaseMessage.includes(exerciseName)) {
+        ret.push(exercise.name); // Return the original case-sensitive exercise name
+      }
+    }
+  
+    // If no match is found, return null or an empty string
+    return ret;
+  };
+  
+  
+  
+  
+
 
   return (
     <ThemeProvider theme={theme}>
