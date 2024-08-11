@@ -395,7 +395,7 @@ export default function Home() {
   // save chat logs function
   const saveChatLog = async (userId, languageCode, messages) => {
     try {
-      const docRef = doc(firestore, 'chatLogs', `${userId}_${languageCode}`);
+      const docRef = doc(firestore, 'chatLogs', userId, 'languages', languageCode);
       await setDoc(docRef, {
         messages: messages,
         timestamp: new Date(),
@@ -403,11 +403,11 @@ export default function Home() {
     } catch (error) {
       console.error("Error saving chat log:", error);
     }
-  };
+  };  
   // loading chat logs
   const loadChatLog = async (userId, languageCode) => {
     try {
-      const docRef = doc(firestore, 'chatLogs', `${userId}_${languageCode}`);
+      const docRef = doc(firestore, 'chatLogs', userId, 'languages', languageCode);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -420,20 +420,20 @@ export default function Home() {
           setMessages([
             { role: 'assistant', content: personalizedWelcome }
           ]);
-        }
-        else{
-          setMessages([{ role: 'assistant', content: t('welcome', {name: t('guest')}) }]);
+        } else {
+          setMessages([{ role: 'assistant', content: t('welcome', { name: t('guest') }) }]);
         }
       }
     } catch (error) {
       console.error("Error loading chat log:", error);
     }
-  };
+  };  
   // clear chat log
   const clearChatLog = async () => {
     try {
-      const docRef = doc(firestore, 'chatLogs', `${user.uid}_${i18n.language}`);
+      const docRef = doc(firestore, 'chatLogs', user.uid, 'languages', i18n.language);
       await deleteDoc(docRef);
+  
       if (user) {
         const displayName = user.displayName || 'User';
         const personalizedWelcome = t('welcome', { name: displayName });
@@ -441,14 +441,14 @@ export default function Home() {
         setMessages([
           { role: 'assistant', content: personalizedWelcome }
         ]);
-      }
-      else{
-        setMessages([{ role: 'assistant', content: t('welcome', {name: t('guest')}) }]);
+      } else {
+        setMessages([{ role: 'assistant', content: t('welcome', { name: t('guest') }) }]);
       }
     } catch (error) {
       console.error("Error clearing chat log:", error);
     }
-  };  
+  };
+  
 
   // // chat logging guest
   // const saveChatLogLocal = (languageCode, messages) => {
