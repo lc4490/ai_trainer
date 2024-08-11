@@ -63,7 +63,7 @@ export default function Home() {
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
     if (user) {
-      const displayName = " " + user.displayName || 'User';
+      const displayName = user.displayName || 'User';
       // const firstName = displayName.split(' ')[0]; // Extract the first name
   
       // Set the personalized welcome message
@@ -74,7 +74,7 @@ export default function Home() {
       ]);
     }
     else{
-      setMessages([{ role: 'assistant', content: t('welcome') }]);
+      setMessages([{ role: 'assistant', content: t('welcome', {name: t('guest')}) }]);
     }
     
   };
@@ -92,114 +92,107 @@ export default function Home() {
 
   // sending messages
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: t('welcome') }
-  ]);
-  const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const sendMessage = async () => {
-    if (!message.trim() || isLoading) return;
-    setIsLoading(true);
-
-    setMessage('');
-    setMessages((messages) => [
-      ...messages,
-      { role: 'user', content: message },
-      { role: 'assistant', content: '' },
+    { role: 'assistant', content: t('welcome', {name: t('guest')}) }
     ]);
-
-    try {
-      // RAG implementation
-      // extract name
-      // let username;
-      // if(user){
-      //   username = user.displayName.split(' ')
-      // }
-      // else{
-      //   username = "Guest"
-      // }
-      // let relevantText;
-      // if(equipment.length> 0){
-      //   relevantText = equipment.map(eq => `${eq.name}`).join("\n");
-      // }
-      // else{
-      //   relevantText="None"
-      // }
-
-      // // Combine user message with retrieved information
-      // const combinedInput = `This is the user's name: ${username}This is the equipment available: ${relevantText}\n`;
-
-      // RAGS FOR LINKS
-      // Extract the exercise name
-      const exerciseNames = extractExerciseName(message); // Implement this as needed
-      console.log(exerciseNames)
-      
-      let youtubeLinks = [];
-      let responseContent = ``;
-      for(let i = 0; i < exerciseNames.length; i++){
-        let links = getYouTubeLinksForExercise(exerciseNames[i])
-        // console.log(link)
-        responseContent += `Here are some YouTube links for ${exerciseNames[i]}: \n\n`;
-        // responseContent+= `${link}\n`
-        // // youtubeLinks.push(getYouTubeLinksForExercise(exerciseNames[i]))
-        links.forEach(link => {
-        responseContent += `${link}\n`;
-      });
-      }
-      console.log(responseContent)
-      // if (exerciseName.length > 0) {
-      //   youtubeLinks = getYouTubeLinksForExercise(exerciseName);
-      // }
-
-      // let responseContent = `Here are some YouTube links for ${exerciseName}: \n\n`;
-      // youtubeLinks.forEach(link => {
-      //   responseContent += `${link}\n`;
-      // });
-
-      // Combine with AI-generated response (if applicable)
-      const combinedInput = `User: ${message}\nYouTube Links: ${responseContent}`;
-
-      // Generate response from the AI model
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify([
-          ...messages, 
-          { role: 'user', content: combinedInput },
-          { role: 'assistant', content: combinedInput }
-        ]),
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const text = decoder.decode(value, { stream: true });
-        setMessages((messages) => {
-          let lastMessage = messages[messages.length - 1];
-          let otherMessages = messages.slice(0, messages.length - 1);
-          return [
-            ...otherMessages,
-            { ...lastMessage, content: lastMessage.content + text },
-          ];
-        });
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setMessages((messages) => [
-        ...messages,
-        { role: 'assistant', content: "I'm sorry, but I encountered an error. Please try again later." },
+    const [message, setMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const sendMessage = async () => {
+      if (!message.trim() || isLoading) return;
+      setIsLoading(true);
+    
+      const userMessage = { role: 'user', content: message };
+      const initialAssistantMessage = { role: 'assistant', content: '' };
+    
+      // Update the messages state with the user's message and an empty assistant message
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        userMessage,
+        initialAssistantMessage,
       ]);
-    }
-    setIsLoading(false);
-  };
+    
+      setMessage(''); // Clear the input field
+    
+      try {
+        // RAGS FOR LINKS
+        // Extract the exercise name
+        const exerciseNames = extractExerciseName(message); // Implement this as needed
+        let responseContent = ``;
+        for(let i = 0; i < exerciseNames.length; i++){
+          let links = getYouTubeLinksForExercise(exerciseNames[i])
+          responseContent += `Here are some YouTube links for ${exerciseNames[i]}: \n\n`;
+          links.forEach(link => {
+            responseContent += `${link}\n`;
+          });
+        }
+    
+        // Combine with AI-generated response (if applicable)
+        const combinedInput = `User: ${message}\nYouTube Links: ${responseContent}`;
+    
+        // Generate response from the AI model
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([
+            ...messages, 
+            { role: 'user', content: combinedInput },
+            { role: 'assistant', content: combinedInput }
+          ]),
+        });
+    
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+    
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+    
+        let assistantResponse = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const text = decoder.decode(value, { stream: true });
+          assistantResponse += text;
+    
+          // Update the last assistant message in the messages state
+          setMessages((prevMessages) => {
+            const lastMessage = prevMessages[prevMessages.length - 1];
+            const updatedMessages = [
+              ...prevMessages.slice(0, prevMessages.length - 1),
+              { ...lastMessage, content: lastMessage.content + text },
+            ];
+    
+            return updatedMessages;
+          });
+        }
+    
+        // Once the assistant response is complete, save the chat log
+        setMessages((prevMessages) => {
+          const updatedMessages = prevMessages.map((msg, index) =>
+            index === prevMessages.length - 1 ? { ...msg, content: assistantResponse } : msg
+          );
+    
+          if (user) {
+            saveChatLog(user.uid, i18n.language, updatedMessages);
+          } 
+          // else {
+          //   saveChatLogLocal(i18n.language, updatedMessages);
+          // }
+    
+          return updatedMessages;
+        });
+      } catch (error) {
+        console.error('Error:', error);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { role: 'assistant', content: "I'm sorry, but I encountered an error. Please try again later." },
+        ]);
+      }
+    
+      setIsLoading(false);
+    };
+  
   const handleKeyPress = (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -266,7 +259,7 @@ export default function Home() {
       ]);
     }
     else{
-      const displayName = "";
+      const displayName = "guest";
       // const firstName = displayName.split(' ')[0]; // Extract the first name
   
       // Set the personalized welcome message
@@ -286,31 +279,7 @@ export default function Home() {
     }
   }, [messages]);
 
-  // gym equipment
-  // const [equipment, setEquipment] = useState([])
-  // // update equipment based on firebase
-  // const updateEquipment = async () => {
-  //   if (auth.currentUser) {
-  //     console.log("User is authenticated, updating equipment...");
-  //     const userUID = auth.currentUser.uid;
-  //     const snapshot = query(collection(firestore, `equipment_${userUID}`));
-  //     const docs = await getDocs(snapshot);
-  //     console.log("Docs fetched:", docs.docs);
-  //     const equipment = [];
-  //     docs.forEach((doc) => {
-  //       console.log("Doc data:", doc.data());
-  //       equipment.push({ name: doc.id, ...doc.data() });
-  //     });
-  //     setEquipment(equipment);
-  //     console.log("Equipment set:", equipment);
-  //   } else {
-  //     console.log("User is not authenticated.");
-  //   }
-  // };
-  // useEffect(() => {
-  //   updateEquipment()
-  // }, [])
-  // RAG implementation for youtube links
+  // custom exercise links RAG
   const exerciseData = [
     {
       name: 'Push-Up',
@@ -392,7 +361,6 @@ export default function Home() {
       ],
     },
   ];
-
   const getYouTubeLinksForExercise = (exerciseName) => {
     const exercise = exerciseData.find(
       (ex) => ex.name.toLowerCase() === exerciseName.toLowerCase()
@@ -423,6 +391,113 @@ export default function Home() {
     // If no match is found, return null or an empty string
     return ret;
   };
+
+  // save chat logs function
+  const saveChatLog = async (userId, languageCode, messages) => {
+    try {
+      const docRef = doc(firestore, 'chatLogs', `${userId}_${languageCode}`);
+      await setDoc(docRef, {
+        messages: messages,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      console.error("Error saving chat log:", error);
+    }
+  };
+  // loading chat logs
+  const loadChatLog = async (userId, languageCode) => {
+    try {
+      const docRef = doc(firestore, 'chatLogs', `${userId}_${languageCode}`);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setMessages(data.messages);
+      } else {
+        if (user) {
+          const displayName = user.displayName || 'User';
+          const personalizedWelcome = t('welcome', { name: displayName });
+      
+          setMessages([
+            { role: 'assistant', content: personalizedWelcome }
+          ]);
+        }
+        else{
+          setMessages([{ role: 'assistant', content: t('welcome', {name: t('guest')}) }]);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading chat log:", error);
+    }
+  };
+  // clear chat log
+  const clearChatLog = async () => {
+    try {
+      const docRef = doc(firestore, 'chatLogs', `${user.uid}_${i18n.language}`);
+      await deleteDoc(docRef);
+      if (user) {
+        const displayName = user.displayName || 'User';
+        const personalizedWelcome = t('welcome', { name: displayName });
+    
+        setMessages([
+          { role: 'assistant', content: personalizedWelcome }
+        ]);
+      }
+      else{
+        setMessages([{ role: 'assistant', content: t('welcome', {name: t('guest')}) }]);
+      }
+    } catch (error) {
+      console.error("Error clearing chat log:", error);
+    }
+  };  
+
+  // // chat logging guest
+  // const saveChatLogLocal = (languageCode, messages) => {
+  //   localStorage.setItem(`chatLog_${languageCode}`, JSON.stringify(messages));
+  // };
+  // // chat loading guest
+  // const loadChatLogLocal = (languageCode) => {
+  //   const savedMessages = localStorage.getItem(`chatLog_${languageCode}`);
+  //   if (savedMessages) {
+  //     setMessages(JSON.parse(savedMessages));
+  //   } else {
+  //     if (user) {
+  //       const displayName = user.displayName || 'User';
+  //       const personalizedWelcome = t('welcome', { name: displayName });
+    
+  //       setMessages([
+  //         { role: 'assistant', content: personalizedWelcome }
+  //       ]);
+  //     }
+  //     else{
+  //       setMessages([{ role: 'assistant', content: t('welcome', {name: t('guest')}) }]);
+  //     }
+  //   }
+  // };
+  // // clear chat log guest
+  // const clearChatLogLocal = () => {
+  //   localStorage.removeItem(`chatLog_${i18n.language}`);
+  //   if (user) {
+  //     const displayName = user.displayName || 'User';
+  //     const personalizedWelcome = t('welcome', { name: displayName });
+  
+  //     setMessages([
+  //       { role: 'assistant', content: personalizedWelcome }
+  //     ]);
+  //   }
+  //   else{
+  //     setMessages([{ role: 'assistant', content: t('welcome', {name: t('guest')}) }]);
+  //   }
+  // };
+
+  // if user change or language change
+  useEffect(() => {
+    if (user) {
+      loadChatLog(user.uid, i18n.language);
+    } 
+    // else {
+    //   loadChatLogLocal(i18n.language);
+    // }
+  }, [user, i18n.language]);
   
   return (
     <ThemeProvider theme={theme}>
@@ -601,6 +676,20 @@ export default function Home() {
               }}
             >
               {t('send')}
+            </Button>
+            {/* clear history */}
+            <Button onClick={clearChatLog} 
+            variant="outlined" 
+            sx={{
+              color: 'text.primary',
+              borderColor: 'text.primary',
+              '&:hover': {
+                backgroundColor: 'text.primary',
+                color: 'background.default',
+                borderColor: 'text.primary',
+              },
+            }}>
+              {t('clear')}
             </Button>
           </Stack>
         </Stack>
