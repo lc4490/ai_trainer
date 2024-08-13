@@ -4,7 +4,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "trainerGPT",
+  title: "AI Personal Trainer",
   description: "An AI assistant that teaches you how to workout.",
 };
 
